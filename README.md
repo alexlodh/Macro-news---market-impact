@@ -17,7 +17,7 @@ An automated agentic loop that observes macroeconomic headlines, reasons about t
    pip install -r requirements.txt
    ```
 3. **Environment**:
-   The project requires an OpenAI API Key. A `.env` file has been created for you with the provided key.
+   The project requires an OpenAI API Key. Add your OpenAI key to the .env file
    ```
    OPENAI_API_KEY=sk-...
    ```
