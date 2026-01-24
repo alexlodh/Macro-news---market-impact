@@ -1,33 +1,58 @@
-# Macro news -> market impact
+# Macro News Agent
 
+An automated agentic loop that observes macroeconomic headlines, reasons about their market impact using an LLM, and acts by producing a structured impact report. It also reflects on its own output to adjust sensitivity.
 
+## Architecture
 
-## Getting Started
+- **Observe**: Fetches RSS feeds (Reuters, BBC, Economist, etc.).
+- **Reason**: Deduplicates items using SQLite and classifies them (Topic, Stance, Relevance, Impact) using `LangChain` + `OpenAI` structured output.
+- **Act**: Generates a markdown report categorized by relevance (High/Med/Low).
+- **Reflect**: Critiques the report and auto-adjusts a `relevance_threshold` in `data/config.json`.
 
-This repository was created using an automated setup script.
+## Setup
 
-## Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/$(gh api user --jq .login)/Macro news -> market impact.git
-
-# Navigate to the project directory
-cd Macro news -> market impact
-```
+1. **Prerequisites**: Python 3.11+.
+2. **Installation**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. **Environment**:
+   The project requires an OpenAI API Key. A `.env` file has been created for you with the provided key.
+   ```
+   OPENAI_API_KEY=sk-...
+   ```
 
 ## Usage
 
-Add your project usage instructions here.
+**1. Run the Agent Cycle:**
+Fetches news, classifies new items, generates a report, and reflects.
+```bash
+python -m src.main run
+```
 
-## Contributing
+**2. List Saved Reports:**
+```bash
+python -m src.main list
+```
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+**3. Show a Report:**
+```bash
+python -m src.main show report_YYYYMMDD_HHMMSS.md
+```
 
-## License
+## Configuration
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+- **Feeds**: Defined in `src/config.py`.
+- **Threshold**: Stored in `data/config.json`. Starts at 7. The agent will adjust this up/down based on whether the reports are too noisy or too empty.
+
+## Testing
+
+Run unit tests:
+```bash
+python -m unittest discover tests
+```
+
+## Extension Steps
+
+- **Add Feeds**: Edit `DEFAULT_FEEDS` in `src/config.py`.
+- **Add Economic Calendar**: create a new fetcher in `src/fetchers.py` that scrapes a calendar site or uses an API, returning `Headline` objects with a specific tag.
