@@ -5,7 +5,7 @@ An automated agentic loop that observes macroeconomic headlines, reasons about t
 ## Architecture
 
 - **Observe**: Fetches RSS feeds (Reuters, BBC, Economist, etc.).
-- **Reason**: Deduplicates items using SQLite and classifies them (Topic, Stance, Relevance, Impact) using `LangChain` + `OpenAI` structured output.
+- **Reason**: Deduplicates items using SQLite, enriches them with local NLP (NER via SpaCy + Sentiment via Transformers), and classifies them (Impact, Relevance) using `LangChain` + `OpenAI`.
 - **Act**: Generates a markdown report categorized by relevance (High/Med/Low).
 - **Reflect**: Critiques the report and auto-adjusts a `relevance_threshold` in `data/config.json`.
 

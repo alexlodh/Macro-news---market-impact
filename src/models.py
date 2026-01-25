@@ -19,5 +19,9 @@ class Classification(BaseModel):
     rationale: str = Field(..., description="Short explanation of the impact")
     confidence: str = Field(..., description="low, medium, or high")
 
+    # Local NLP augmentation
+    entities: Optional[List[dict]] = Field(default=None, description="Extracted entities via local NLP")
+    sentiment: Optional[dict] = Field(default=None, description="Sentiment analysis via local NLP")
+
 class ClassifiedItem(Headline):
     classification: Classification
