@@ -90,7 +90,16 @@ llm = ChatOpenAI(
 
 # --- Classification Chain ---
 classification_prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are an expert macroeconomic analyst. Your job is to analyze news headlines and assess their impact on financial markets (Rates, Equities, FX). You are hawkish/dovish aware."),
+    ("system", """You are an expert macroeconomic analyst and investment strategist. Your job is to analyze news headlines and assess their impact on financial markets (Rates, Equities, FX). 
+    
+When relevant to equities, provide specific investment recommendations for companies mentioned or impacted by the news. Include:
+- Stock ticker symbols
+- Buy/Sell/Hold recommendations
+- Rationale based on the news impact
+- Timeframe (short-term, medium-term, long-term)
+- Risk level
+
+Only provide recommendations when there is a clear, actionable connection between the news and specific companies."""),
     ("human", "Analyze the following headline and provide a structured classification.\n\nSource: {source}\nTitle: {title}\nSummary: {summary}\n")
 ])
 
@@ -129,16 +138,23 @@ def classify_item(headline: Headline) -> Classification:
 # --- Reporting Chain ---
 # We just return a string for the report
 report_prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are a senior market strategist writing a daily briefing."),
+    ("system", "You are a senior market strategist writing a daily briefing with actionable investment recommendations."),
     ("human", """Here is a list of analyzed news items:
 {items_text}
 
 Produce a markdown report with these exact sections:
-1. “Top 3 items (High relevance)” 
-2. “Worth a glance (Medium)”
-3. “Noise (Low)”
+1. "Investment Recommendations" - Consolidate all stock recommendations with clear buy/sell/hold signals, organized by action type
+2. "Top 3 items (High relevance)" 
+3. "Worth a glance (Medium)"
+4. "Noise (Low)"
 
-For each item, include 3–6 bullets covering: what happened, why it matters, expected market impact, and confidence.
+For the Investment Recommendations section:
+- Group recommendations by action (Buy, Sell, Hold)
+- Include ticker, company name, rationale, timeframe, and risk level
+- Highlight any conflicting recommendations if present
+- Only include this section if recommendations exist
+
+For each news item, include 3–6 bullets covering: what happened, why it matters, expected market impact, and confidence.
 Do not make up items. Only use the provided list.
 """)
 ])
@@ -153,6 +169,17 @@ def generate_report_content(items: List[ClassifiedItem]) -> str:
         items_text += f"{idx}. [{c.relevance.upper()}] {item.title} ({item.source})\n"
         items_text += f"   Topic: {c.topic}, Impact: {c.impact_direction}\n"
         items_text += f"   Rationale: {c.rationale}\n"
+        
+        # Include investment recommendations if present
+        if c.investment_recommendations:
+            items_text += f"   Investment Recommendations:\n"
+            for rec in c.investment_recommendations:
+                items_text += f"      - {rec.action.upper()}: {rec.ticker} ({rec.company_name})\n"
+                items_text += f"        Rationale: {rec.rationale}\n"
+                items_text += f"        Timeframe: {rec.timeframe}, Risk: {rec.risk_level}\n"
+                if rec.price_target:
+                    items_text += f"        Price Target: {rec.price_target}\n"
+        
         # Include local NLP outputs if present
         if getattr(c, 'entities', None):
             try:
